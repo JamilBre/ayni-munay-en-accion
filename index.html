@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AYNI MUNAY EN ACCIÓN | Gestión y Transparencia de Donaciones</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js para Dashboards -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SweetAlert2 para retroalimentación al usuario (ISO Usabilidad) -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- HEADER INSTITUCIONAL -->
+  <header class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-sm border border-white/20">
+          <i class="fa-solid fa-tree text-3xl text-emerald-300"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">AYNI MUNAY EN ACCIÓN</h1>
+          <p class="text-emerald-200 text-sm md:text-base italic font-medium">"Unidos por quienes protegen nuestros bosques"</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-semibold bg-emerald-900/60 text-emerald-200 border border-emerald-500/30">
+          <i class="fa-solid fa-shield-halved"></i> Estándar de Calidad ISO/IEC 25010
+        </span>
+        <button onclick="cargarDatos()" class="bg-white/15 hover:bg-white/25 transition px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVEGACIÓN DE PESTAÑAS -->
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-2 md:space-x-6 overflow-x-auto py-2" aria-label="Tabs">
+        <button onclick="cambiarTab('dashboard')" id="tab-dashboard" class="tab-btn bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard & Filtros
+        </button>
+        <button onclick="cambiarTab('donar')" id="tab-donar" class="tab-btn text-slate-600 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition">
+          <i class="fa-solid fa-hand-holding-heart"></i> Registrar Donativo
+        </button>
+        <button onclick="cambiarTab('transparencia')" id="tab-transparencia" class="tab-btn text-slate-600 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition">
+          <i class="fa-solid fa-eye"></i> Portal de Transparencia (Gastos/Entregas)
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+    <!-- ================= SECCIÓN 1: DASHBOARD ================= -->
+    <section id="sec-dashboard" class="space-y-8">
+      
+      <!-- Barra de Filtro por Facultad -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-slate-700 font-semibold">
+          <i class="fa-solid fa-filter text-emerald-600"></i>
+          <span>Filtrar métricas de donación por Facultad:</span>
+        </div>
+        <select id="filtroFacultad" onchange="renderizarDashboard()" class="w-full sm:w-80 rounded-lg border-slate-300 border p-2.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+          <option value="TODAS">🏛️ Todas las Facultades (Consolidado General)</option>
+          <option value="Ingeniería y Arquitectura">Facultad de Ingeniería y Arquitectura</option>
+          <option value="Ciencias de la Salud">Facultad de Ciencias de la Salud</option>
+          <option value="Ciencias Económicas, Administrativas y Contables">Facultad de Ciencias Económicas, Adm. y Contables</option>
+          <option value="Derecho y Ciencia Política">Facultad de Derecho y Ciencia Política</option>
+          <option value="Ciencias y Humanidades">Facultad de Ciencias y Humanidades</option>
+          <option value="Externo / Voluntariado General">Externo / Voluntariado General</option>
+        </select>
+      </div>
+
+      <!-- Tarjetas KPI de los 4 Productos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-sky-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400">Bebidas Hidratantes</p>
+              <h3 id="kpi-bebidas" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-sky-50 text-sky-600 rounded-lg"><i class="fa-solid fa-bottle-water text-xl"></i></div>
+          </div>
+          <p id="stock-bebidas" class="text-xs text-slate-500 mt-3 font-medium">En almacén: 0 | Entregados: 0</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-600">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400">Chocolates en Barra</p>
+              <h3 id="kpi-chocolates" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-amber-50 text-amber-700 rounded-lg"><i class="fa-solid fa-candy-cane text-xl"></i></div>
+          </div>
+          <p id="stock-chocolates" class="text-xs text-slate-500 mt-3 font-medium">En almacén: 0 | Entregados: 0</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-600">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400">Latas de Atún</p>
+              <h3 id="kpi-atun" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-fish text-xl"></i></div>
+          </div>
+          <p id="stock-atun" class="text-xs text-slate-500 mt-3 font-medium">En almacén: 0 | Entregados: 0</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-600">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold uppercase text-slate-400">Galletas Solapadas (Paq.)</p>
+              <h3 id="kpi-galletas" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-cookie-bite text-xl"></i></div>
+          </div>
+          <p id="stock-galletas" class="text-xs text-slate-500 mt-3 font-medium">En almacén: 0 | Entregados: 0</p>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-column text-emerald-600"></i> Balance de Transparencia: Recaudado vs. Entregado
+          </h4>
+          <canvas id="chartProductos" height="220"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-building-columns text-emerald-600"></i> Participación Total por Facultades (Unidades donadas)
+          </h4>
+          <canvas id="chartFacultades" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabla de Últimas Donaciones -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+          <h4 class="font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-emerald-600"></i> Padrón de Donantes Registrados
+          </h4>
+          <span id="contadorRegistros" class="text-xs bg-slate-100 text-slate-600 py-1 px-2.5 rounded-md font-semibold">0 registros</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+              <tr>
+                <th class="p-3.5 border-b">Código</th>
+                <th class="p-3.5 border-b">Fecha y Hora</th>
+                <th class="p-3.5 border-b">Donante</th>
+                <th class="p-3.5 border-b">DNI (Enmascarado)</th>
+                <th class="p-3.5 border-b">Facultad</th>
+                <th class="p-3.5 border-b">Producto</th>
+                <th class="p-3.5 border-b text-right">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDonacionesBody" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="p-6 text-center text-slate-400">Cargando datos del servidor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN 2: REGISTRAR DONATIVO ================= -->
+    <section id="sec-donar" class="hidden max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+        <div class="bg-emerald-700 p-6 text-white">
+          <h2 class="text-xl font-bold flex items-center gap-2">
+            <i class="fa-solid fa-box-open"></i> Registro Oficial de Donaciones
+          </h2>
+          <p class="text-emerald-100 text-sm mt-1">Todos los ingresos quedan respaldados en tiempo real en la matriz auditable.</p>
+        </div>
+
+        <form id="formDonacion" onsubmit="enviarDonacion(event)" class="p-6 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">DNI del Donante *</label>
+              <input type="text" id="donDni" required maxlength="8" pattern="\d{8}" title="Ingrese exactamente 8 dígitos numéricos" placeholder="Ej. 71234567" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+              <span class="text-[11px] text-slate-400">Exactamente 8 dígitos numéricos.</span>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre Completo *</label>
+              <input type="text" id="donNombre" required minlength="3" placeholder="Nombres y Apellidos" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Facultad de Procedencia *</label>
+            <select id="donFacultad" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+              <option value="" disabled selected>Seleccione una facultad...</option>
+              <option value="Ingeniería y Arquitectura">Facultad de Ingeniería y Arquitectura</option>
+              <option value="Ciencias de la Salud">Facultad de Ciencias de la Salud</option>
+              <option value="Ciencias Económicas, Administrativas y Contables">Facultad de Ciencias Económicas, Administrativas y Contables</option>
+              <option value="Derecho y Ciencia Política">Facultad de Derecho y Ciencia Política</option>
+              <option value="Ciencias y Humanidades">Facultad de Ciencias y Humanidades</option>
+              <option value="Externo / Voluntariado General">Externo / Voluntariado General</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Producto Donado *</label>
+              <select id="donProducto" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                <option value="Bebidas hidratantes">💧 Bebidas hidratantes (Unidad)</option>
+                <option value="Chocolates en barra">🍫 Chocolates en barra (Unidad)</option>
+                <option value="Atún">🐟 Atún (Lata)</option>
+                <option value="Galletas solapadas (Paquete)">🍪 Galletas solapadas (Paquete)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad *</label>
+              <input type="number" id="donCantidad" required min="1" max="5000" value="1" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+          </div>
+
+          <!-- Nota aclaratoria para Galletas Solapadas (ISO Adecuación Funcional) -->
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-3.5 text-xs text-amber-800 flex items-start gap-2.5">
+            <i class="fa-solid fa-circle-info text-amber-600 text-base mt-0.5"></i>
+            <div>
+              <strong>Criterio de Contabilización:</strong> Para las <em>Galletas solapadas</em>, cada paquete cerrado o tira equivale a <strong>1 unidad (1 paquete)</strong>, independientemente de cuántas galletas individuales contenga en su interior.
+            </div>
+          </div>
+
+          <button type="submit" id="btnSubmitDonacion" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Registrar Donación
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN 3: TRANSPARENCIA (GASTOS / ENTREGAS) ================= -->
+    <section id="sec-transparencia" class="hidden space-y-8">
+      
+      <!-- Explicación de Transparencia -->
+      <div class="bg-teal-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-2">
+          <span class="bg-teal-700 text-teal-200 text-xs font-bold px-2.5 py-1 rounded uppercase">Trazabilidad Total</span>
+          <h2 class="text-2xl font-bold">¿En qué y cómo se utilizan las donaciones?</h2>
+          <p class="text-teal-100 text-sm max-w-2xl">
+            Cada vez que un lote de suministros sale del acopio hacia las brigadas forestales, bomberos o comunidades afectadas, se registra el acta de salida descontando automáticamente del stock disponible.
+          </p>
+        </div>
+        <button onclick="document.getElementById('modalSalida').classList.remove('hidden')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-3 rounded-xl shadow-md transition whitespace-nowrap flex items-center gap-2">
+          <i class="fa-solid fa-truck-ramp-box"></i> Registrar Salida / Entrega
+        </button>
+      </div>
+
+      <!-- Tabla de Salidas / Uso de Donaciones -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200">
+          <h4 class="font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Bitácora Auditable de Entregas y Destino de Donaciones
+          </h4>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+              <tr>
+                <th class="p-3.5 border-b">ID Acta</th>
+                <th class="p-3.5 border-b">Fecha de Salida</th>
+                <th class="p-3.5 border-b">Insumo Entregado</th>
+                <th class="p-3.5 border-b text-right">Cantidad Despachada</th>
+                <th class="p-3.5 border-b">Brigada / Destino Beneficiario</th>
+                <th class="p-3.5 border-b">Responsable de Recepción</th>
+                <th class="p-3.5 border-b">Detalle / N° Guía / Evidencia</th>
+              </tr>
+            </thead>
+            <tbody id="tablaSalidasBody" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="p-6 text-center text-slate-400">Sin registros de salidas cargados.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal para Registrar Salida de Almacén -->
+      <div id="modalSalida" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+          <div class="bg-slate-800 text-white p-5 flex justify-between items-center">
+            <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-truck-fast text-amber-400"></i> Registrar Uso / Despacho de Donaciones</h3>
+            <button onclick="document.getElementById('modalSalida').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+          </div>
+          <form id="formSalida" onsubmit="enviarSalida(event)" class="p-6 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Insumo a Despachar *</label>
+                <select id="salProducto" required class="w-full rounded-lg border border-slate-300 p-2.5 text-sm">
+                  <option value="Bebidas hidratantes">Bebidas hidratantes</option>
+                  <option value="Chocolates en barra">Chocolates en barra</option>
+                  <option value="Atún">Atún</option>
+                  <option value="Galletas solapadas (Paquete)">Galletas solapadas (Paquete)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad Entregada *</label>
+                <input type="number" id="salCantidad" required min="1" value="1" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Brigada / Lugar de Destino *</label>
+              <input type="text" id="salDestino" required placeholder="Ej. Compañía de Bomberos Cusco N° 39 / Guardaparques Sacsayhuamán" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Responsable que recibe / despacha *</label>
+              <input type="text" id="salResponsable" required placeholder="Nombre y Cargo o DNI" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Observación / Link de Foto o Acta *</label>
+              <input type="text" id="salEvidencia" required placeholder="Ej. Acta de entrega N° 004 - Lote hidratación matutina" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm">
+            </div>
+            <div class="pt-2 flex justify-end gap-3">
+              <button type="button" onclick="document.getElementById('modalSalida').classList.add('hidden')" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-semibold">Cancelar</button>
+              <button type="submit" id="btnSubmitSalida" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm">Guardar Despacho</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-500">
+    <p><strong>AYNI MUNAY EN ACCIÓN</strong> — "Unidos por quienes protegen nuestros bosques" | Arquitectura auditable bajo criterios ISO/IEC 25010</p>
+  </footer>
+
+  <!-- LÓGICA DE APLICACIÓN -->
+  <script>
+    // =========================================================================
+    // REEMPLAZA ESTA URL CON TU URL DE GOOGLE APPS SCRIPT (/exec)
+    // =========================================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbyVTJInsdI4O-MDRfN8RPaCb2a1O0xICjZQO3-x9WVph93250tI2Z5_SBAsuqBImNIn/exec";
+
+    let estadoGlobal = {
+      donaciones: [],
+      salidas: []
+    };
+
+    let chartProdInstance = null;
+    let chartFacInstance = null;
+
+    // Control de pestañas
+    function cambiarTab(tab) {
+      ['dashboard', 'donar', 'transparencia'].forEach(t => {
+        document.getElementById('sec-' + t).classList.add('hidden');
+        const btn = document.getElementById('tab-' + t);
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+      });
+      document.getElementById('sec-' + tab).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tab);
+      activeBtn.classList.add('bg-emerald-600', 'text-white');
+      activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+    }
+
+    // Cargar datos desde Google Sheets
+    async function cargarDatos() {
+      if (API_URL.includes("PEGAR_AQUI")) {
+        console.warn("Modo demostración activo: Configura tu API_URL de Apps Script.");
+        cargarDatosDemo();
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if (data.status === 'success') {
+          estadoGlobal.donaciones = data.donaciones || [];
+          estadoGlobal.salidas = data.salidas || [];
+          renderizarDashboard();
+          renderizarTransparencia();
+        } else {
+          Swal.fire('Error', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error de Conexión', 'No se pudo conectar con Google Sheets. Verifica la URL del Script.', 'error');
+      }
+    }
+
+    // Renderizar métricas, gráficos y tablas según filtro
+    function renderizarDashboard() {
+      const facSeleccionada = document.getElementById('filtroFacultad').value;
+      const donacionesFiltradas = facSeleccionada === 'TODAS'
+        ? estadoGlobal.donaciones
+        : estadoGlobal.donaciones.filter(d => d.Facultad === facSeleccionada);
+
+      const productos = [
+        { key: "Bebidas hidratantes", idKpi: "kpi-bebidas", idStock: "stock-bebidas" },
+        { key: "Chocolates en barra", idKpi: "kpi-chocolates", idStock: "stock-chocolates" },
+        { key: "Atún", idKpi: "kpi-atun", idStock: "stock-atun" },
+        { key: "Galletas solapadas (Paquete)", idKpi: "kpi-galletas", idStock: "stock-galletas" }
+      ];
+
+      const datosRecaudados = [];
+      const datosEntregados = [];
+
+      productos.forEach(p => {
+        // Total recaudado según el filtro actual
+        const recaudadoFiltro = donacionesFiltradas
+          .filter(d => d.Producto === p.key)
+          .reduce((acc, d) => acc + (Number(d.Cantidad) || 0), 0);
+
+        // Total global para calcular almacén real
+        const recaudadoGlobal = estadoGlobal.donaciones
+          .filter(d => d.Producto === p.key)
+          .reduce((acc, d) => acc + (Number(d.Cantidad) || 0), 0);
+
+        const entregadoGlobal = estadoGlobal.salidas
+          .filter(s => s.Producto === p.key)
+          .reduce((acc, s) => acc + (Number(s.Cantidad_Entregada) || 0), 0);
+
+        const disponibleGlobal = recaudadoGlobal - entregadoGlobal;
+
+        document.getElementById(p.idKpi).textContent = recaudadoFiltro;
+        document.getElementById(p.idStock).textContent = `Stock disp. general: ${disponibleGlobal} | Entregados: ${entregadoGlobal}`;
+
+        datosRecaudados.push(recaudadoFiltro);
+        datosEntregados.push(entregadoGlobal);
+      });
+
+      actualizarGraficos(datosRecaudados, datosEntregados);
+      renderizarTablaDonaciones(donacionesFiltradas);
+    }
+
+    function actualizarGraficos(recaudados, entregados) {
+      const ctxProd = document.getElementById('chartProductos').getContext('2d');
+      if (chartProdInstance) chartProdInstance.destroy();
+      chartProdInstance = new Chart(ctxProd, {
+        type: 'bar',
+        data: {
+          labels: ['Bebidas', 'Chocolates', 'Atún', 'Galletas (Paq.)'],
+          datasets: [
+            { label: 'Donaciones Recibidas (Filtro)', data: recaudados, backgroundColor: '#059669', borderRadius: 6 },
+            { label: 'Entregado a Brigadas (Total)', data: entregados, backgroundColor: '#f59e0b', borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      // Agrupar por facultades
+      const conteoFacultades = {};
+      estadoGlobal.donaciones.forEach(d => {
+        conteoFacultades[d.Facultad] = (conteoFacultades[d.Facultad] || 0) + (Number(d.Cantidad) || 0);
+      });
+
+      const ctxFac = document.getElementById('chartFacultades').getContext('2d');
+      if (chartFacInstance) chartFacInstance.destroy();
+      chartFacInstance = new Chart(ctxFac, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(conteoFacultades).length ? Object.keys(conteoFacultades) : ['Sin datos'],
+          datasets: [{
+            data: Object.values(conteoFacultades).length ? Object.values(conteoFacultades) : [1],
+            backgroundColor: ['#059669', '#0284c7', '#d97706', '#7c3aed', '#db2777', '#475569']
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    // Protección de privacidad en tabla pública: Enmascara los últimos dígitos del DNI
+    function enmascararDNI(dni) {
+      const limpio = String(dni).replace(/'/g, '').trim();
+      if (limpio.length === 8) return limpio.substring(0, 4) + "****";
+      return limpio;
+    }
+
+    function renderizarTablaDonaciones(lista) {
+      const tbody = document.getElementById('tablaDonacionesBody');
+      document.getElementById('contadorRegistros').textContent = `${lista.length} registros`;
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">No hay donaciones registradas para este filtro.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = lista.slice().reverse().map(d => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3.5 font-mono text-xs text-slate-500">#${d.ID}</td>
+          <td class="p-3.5 text-slate-500 text-xs">${d.Fecha_Hora}</td>
+          <td class="p-3.5 font-semibold text-slate-800">${d.Nombre_Donante}</td>
+          <td class="p-3.5 font-mono text-xs text-slate-600">${enmascararDNI(d.DNI)}</td>
+          <td class="p-3.5 text-xs"><span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-medium">${d.Facultad}</span></td>
+          <td class="p-3.5 font-medium">${d.Producto}</td>
+          <td class="p-3.5 text-right font-bold text-emerald-700">+${d.Cantidad}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderizarTransparencia() {
+      const tbody = document.getElementById('tablaSalidasBody');
+      if (estadoGlobal.salidas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Aún no se han registrado despachos de almacén.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = estadoGlobal.salidas.slice().reverse().map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3.5 font-mono text-xs text-amber-700 font-bold">ACTA-${s.ID}</td>
+          <td class="p-3.5 text-xs text-slate-500">${s.Fecha_Hora}</td>
+          <td class="p-3.5 font-semibold">${s.Producto}</td>
+          <td class="p-3.5 text-right font-bold text-amber-600">-${s.Cantidad_Entregada}</td>
+          <td class="p-3.5 font-medium text-slate-800">${s.Destino_Brigada}</td>
+          <td class="p-3.5 text-xs text-slate-600">${s.Responsable}</td>
+          <td class="p-3.5 text-xs text-slate-500 italic">${s.Evidencia_Observacion}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Enviar nueva donación (POST)
+    async function enviarDonacion(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitDonacion');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Procesando...`;
+
+      const payload = {
+        accion: 'REGISTRAR_DONACION',
+        dni: document.getElementById('donDni').value.trim(),
+        nombre: document.getElementById('donNombre').value.trim(),
+        facultad: document.getElementById('donFacultad').value,
+        producto: document.getElementById('donProducto').value,
+        cantidad: Number(document.getElementById('donCantidad').value)
+      };
+
+      if (API_URL.includes("PEGAR_AQUI")) {
+        estadoGlobal.donaciones.push({
+          ID: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          Fecha_Hora: new Date().toLocaleString(),
+          DNI: payload.dni,
+          Nombre_Donante: payload.nombre,
+          Facultad: payload.facultad,
+          Producto: payload.producto,
+          Cantidad: payload.cantidad
+        });
+        Swal.fire('¡Registrado (Modo Demo)!', 'Donación agregada localmente.', 'success');
+        document.getElementById('formDonacion').reset();
+        renderizarDashboard();
+        cambiarTab('dashboard');
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Registrar Donación`;
+        return;
+      }
+
+      try {
+        // Uso de text/plain para evitar preflight CORS en Google Apps Script
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+
+        if (res.status === 'success') {
+          Swal.fire('¡Muchas gracias!', `Donación registrada con código #${res.id}`, 'success');
+          document.getElementById('formDonacion').reset();
+          await cargarDatos();
+          cambiarTab('dashboard');
+        } else {
+          Swal.fire('Atención', res.message, 'warning');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'No se pudo registrar la donación.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Registrar Donación`;
+      }
+    }
+
+    // Enviar salida de transparencia (POST)
+    async function enviarSalida(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitSalida');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const payload = {
+        accion: 'REGISTRAR_SALIDA',
+        producto: document.getElementById('salProducto').value,
+        cantidad: Number(document.getElementById('salCantidad').value),
+        destino: document.getElementById('salDestino').value.trim(),
+        responsable: document.getElementById('salResponsable').value.trim(),
+        evidencia: document.getElementById('salEvidencia').value.trim()
+      };
+
+      if (API_URL.includes("PEGAR_AQUI")) {
+        estadoGlobal.salidas.push({
+          ID: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          Fecha_Hora: new Date().toLocaleString(),
+          Producto: payload.producto,
+          Cantidad_Entregada: payload.cantidad,
+          Destino_Brigada: payload.destino,
+          Responsable: payload.responsable,
+          Evidencia_Observacion: payload.evidencia
+        });
+        document.getElementById('modalSalida').classList.add('hidden');
+        document.getElementById('formSalida').reset();
+        renderizarDashboard();
+        renderizarTransparencia();
+        Swal.fire('Despacho Registrado (Demo)', 'El stock se actualizó con éxito.', 'success');
+        btn.disabled = false;
+        btn.textContent = 'Guardar Despacho';
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+
+        if (res.status === 'success') {
+          document.getElementById('modalSalida').classList.add('hidden');
+          document.getElementById('formSalida').reset();
+          Swal.fire('Transparencia Actualizada', `Acta de salida #${res.id} generada.`, 'success');
+          await cargarDatos();
+        } else {
+          Swal.fire('Stock Insuficiente o Error', res.message, 'warning');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'No se pudo registrar la salida.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar Despacho';
+      }
+    }
+
+    // Datos de prueba iniciales por si abres el HTML antes de conectar tu Google Sheet
+    function cargarDatosDemo() {
+      estadoGlobal.donaciones = [
+        { ID: "A101", Fecha_Hora: "2026-10-14 09:15:00", DNI: "74125896", Nombre_Donante: "Carlos Mendoza", Facultad: "Ingeniería y Arquitectura", Producto: "Bebidas hidratantes", Cantidad: 24 },
+        { ID: "A102", Fecha_Hora: "2026-10-14 10:05:00", DNI: "70369852", Nombre_Donante: "Lucía Quispe", Facultad: "Ciencias de la Salud", Producto: "Galletas solapadas (Paquete)", Cantidad: 15 },
+        { ID: "A103", Fecha_Hora: "2026-10-14 11:20:00", DNI: "45896321", Nombre_Donante: "Marco Huamán", Facultad: "Ingeniería y Arquitectura", Producto: "Atún", Cantidad: 30 },
+        { ID: "A104", Fecha_Hora: "2026-10-14 12:10:00", DNI: "72589631", Nombre_Donante: "Valeria Rojas", Facultad: "Derecho y Ciencia Política", Producto: "Chocolates en barra", Cantidad: 40 }
+      ];
+      estadoGlobal.salidas = [
+        { ID: "S001", Fecha_Hora: "2026-10-14 14:00:00", Producto: "Bebidas hidratantes", Cantidad_Entregada: 10, Destino_Brigada: "Brigada Forestal Sacsayhuamán", Responsable: "Cap. Jorge Vargas", Evidencia_Observacion: "Acta N° 01 - Hidratación de primera línea" },
+        { ID: "S002", Fecha_Hora: "2026-10-14 15:30:00", Producto: "Galletas solapadas (Paquete)", Cantidad_Entregada: 5, Destino_Brigada: "Compañía de Bomberos Cusco N° 39", Responsable: "Tnte. María Flores", Evidencia_Observacion: "Acta N° 02 - Raciones de campaña" }
+      ];
+      renderizarDashboard();
+      renderizarTransparencia();
+    }
+
+    // Iniciar al cargar la página
+    window.addEventListener('DOMContentLoaded', cargarDatos);
+  </script>
+</body>
+</html>
