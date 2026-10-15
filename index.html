@@ -433,8 +433,14 @@
         const disponibleGlobal = recaudadoGlobal - entregadoGlobal;
 
         document.getElementById(p.idKpi).textContent = recaudadoFiltro;
-        document.getElementById(p.idStock).textContent = `Stock disp. general: ${disponibleGlobal} | Entregados: ${entregadoGlobal}`;
-
+        document.getElementById(p.idStock).innerHTML = `
+          <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+            📦 En almacén: ${disponibleGlobal}
+          </span>
+          <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200">
+            🚚 Entregados: ${entregadoGlobal}
+          </span>
+        `;
         datosRecaudados.push(recaudadoFiltro);
         datosEntregados.push(entregadoGlobal);
       });
